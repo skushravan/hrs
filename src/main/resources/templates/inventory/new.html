@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>New Inventory Item</title>
+</head>
+<body>
+<div th:replace="~{navbar :: navbar}"></div>
+<h1>New Inventory Item (Placeholder)</h1>
+
+<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+<form th:action="@{/inventory}" method="post" th:object="${item}">
+    <div>
+        <label>Name</label>
+        <input type="text" th:field="*{name}" required maxlength="150" />
+    </div>
+    <div>
+        <label>Category</label>
+        <input type="text" th:field="*{category}" maxlength="100" />
+    </div>
+    <div>
+        <label>Unit</label>
+        <input type="text" th:field="*{unit}" required maxlength="20" placeholder="kg, l, pcs" />
+    </div>
+    <div>
+        <label>Quantity</label>
+        <input type="number" th:field="*{quantity}" min="0" required />
+    </div>
+    <div>
+        <label>Low Stock Threshold</label>
+        <input type="number" th:field="*{lowStockThreshold}" min="0" required />
+    </div>
+    <div>
+        <button type="submit">Create</button>
+        <a th:href="@{/inventory}">Cancel</a>
+    </div>
+    </form>
+
+</body>
+</html>
+
+

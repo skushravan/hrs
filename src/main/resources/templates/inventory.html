@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - Hotel Reservation System</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <div th:replace="~{navbar :: navbar}"></div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-6">
+                    <i class="bi bi-box-seam text-primary"></i> Inventory Management
+                </h1>
+                <p class="text-muted">Manage restaurant inventory items and stock levels</p>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        <div th:if="${lowStockItems != null and !lowStockItems.empty}" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <h6 class="alert-heading">
+                <i class="bi bi-exclamation-triangle"></i> Low Stock Alert
+            </h6>
+            <p class="mb-2">The following items are running low on stock:</p>
+            <ul class="mb-0">
+                <li th:each="item : ${lowStockItems}">
+                    <strong th:text="${item.name}">Item Name</strong> - 
+                    Current: <span th:text="${item.quantity}">0</span> 
+                    <span th:text="${item.unit}">units</span> | 
+                    Threshold: <span th:text="${item.lowStockThreshold}">5</span>
+                </li>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Filter and Actions -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="btn-group" role="group">
+                    <a href="/inventory" class="btn btn-outline-primary" th:classappend="${lowStockOnly == null} ? ' active'">
+                        <i class="bi bi-list"></i> All Items
+                    </a>
+                    <a href="/inventory/low-stock" class="btn btn-outline-warning" th:classappend="${lowStockOnly == true} ? ' active'">
+                        <i class="bi bi-exclamation-triangle"></i> Low Stock Only
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="/inventory/new" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add New Item
+                </a>
+            </div>
+        </div>
+
+        <!-- Inventory Items Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-table"></i> Inventory Items
+                    <span th:if="${lowStockOnly == true}" class="badge bg-warning ms-2">Low Stock Only</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${items != null and !items.empty}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Current Stock</th>
+                                    <th>Low Stock Threshold</th>
+                                    <th>Status</th>
+                                    <th>Last Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${items}">
+                                    <td>
+                                        <strong th:text="${item.name}">Item Name</strong>
+                                    </td>
+                                    <td>
+                                        <span th:if="${item.category != null}" th:text="${item.category}" class="badge bg-secondary">Category</span>
+                                        <span th:if="${item.category == null}" class="text-muted">-</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info" th:text="${item.quantity + ' ' + item.unit}">10 kg</span>
+                                    </td>
+                                    <td>
+                                        <span th:text="${item.lowStockThreshold + ' ' + item.unit}">5 kg</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${item.isLowStock()}" class="badge bg-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> Low Stock
+                                        </span>
+                                        <span th:if="${!item.isLowStock()}" class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> In Stock
+                                        </span>
+                                    </td>
+                                    <td th:text="${#temporals.format(item.updatedAt, 'MMM dd, yyyy HH:mm')}">Jan 15, 2024 14:30</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a th:href="@{/inventory/{id}(id=${item.id})}" class="btn btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-gear"></i> Manage
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <button class="dropdown-item" data-bs-toggle="modal" th:data-bs-target="'#stockInModal' + ${item.id}">
+                                                            <i class="bi bi-plus-circle text-success"></i> Stock In
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="dropdown-item" data-bs-toggle="modal" th:data-bs-target="'#stockOutModal' + ${item.id}">
+                                                            <i class="bi bi-dash-circle text-danger"></i> Stock Out
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="dropdown-item" data-bs-toggle="modal" th:data-bs-target="'#adjustStockModal' + ${item.id}">
+                                                            <i class="bi bi-arrow-repeat text-info"></i> Adjust Stock
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div th:if="${items == null or items.empty}" class="text-center py-5">
+                    <i class="bi bi-box-seam display-1 text-muted"></i>
+                    <h4 class="text-muted mt-3">No Inventory Items Found</h4>
+                    <p class="text-muted">Start by adding your first inventory item.</p>
+                    <a href="/inventory/new" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add New Item
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <a href="/inventory/new" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-circle"></i> Add New Item
+                </a>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="/inventory/low-stock" class="btn btn-outline-warning btn-lg">
+                    <i class="bi bi-exclamation-triangle"></i> View Low Stock Items
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Management Modals -->
+    <div th:each="item : ${items}" th:if="${items != null and !items.empty}">
+        <!-- Stock In Modal -->
+        <div class="modal fade" th:id="'stockInModal' + ${item.id}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-plus-circle text-success"></i> Stock In - <span th:text="${item.name}">Item</span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/inventory/{id}/tx(id=${item.id})}" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="type" value="IN">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity to Add</label>
+                                <input type="number" class="form-control" name="quantity" min="1" required>
+                                <div class="form-text">Current stock: <span th:text="${item.quantity + ' ' + item.unit}">10 kg</span></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="note" class="form-label">Note (Optional)</label>
+                                <textarea class="form-control" name="note" rows="2" placeholder="e.g., Supplier delivery, restock"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="createdBy" class="form-label">Recorded By</label>
+                                <input type="text" class="form-control" name="createdBy" value="Admin" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Add Stock
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Out Modal -->
+        <div class="modal fade" th:id="'stockOutModal' + ${item.id}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-dash-circle text-danger"></i> Stock Out - <span th:text="${item.name}">Item</span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/inventory/{id}/tx(id=${item.id})}" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="type" value="OUT">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity to Remove</label>
+                                <input type="number" class="form-control" name="quantity" min="1" th:max="${item.quantity}" required>
+                                <div class="form-text">Current stock: <span th:text="${item.quantity + ' ' + item.unit}">10 kg</span></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="note" class="form-label">Note (Optional)</label>
+                                <textarea class="form-control" name="note" rows="2" placeholder="e.g., Used for cooking, waste"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="createdBy" class="form-label">Recorded By</label>
+                                <input type="text" class="form-control" name="createdBy" value="Admin" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-dash-circle"></i> Remove Stock
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adjust Stock Modal -->
+        <div class="modal fade" th:id="'adjustStockModal' + ${item.id}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-arrow-repeat text-info"></i> Adjust Stock - <span th:text="${item.name}">Item</span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/inventory/{id}/tx(id=${item.id})}" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="type" value="ADJUSTMENT">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">New Stock Level</label>
+                                <input type="number" class="form-control" name="quantity" min="0" required>
+                                <div class="form-text">Current stock: <span th:text="${item.quantity + ' ' + item.unit}">10 kg</span></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="note" class="form-label">Note (Optional)</label>
+                                <textarea class="form-control" name="note" rows="2" placeholder="e.g., Stock count correction, found discrepancy"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="createdBy" class="form-label">Recorded By</label>
+                                <input type="text" class="form-control" name="createdBy" value="Admin" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-info">
+                                <i class="bi bi-arrow-repeat"></i> Adjust Stock
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript for inventory management -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+
+            // Set current stock values in adjustment modals
+            document.querySelectorAll('[id^="adjustStockModal"]').forEach(modal => {
+                const modalElement = document.getElementById(modal.id);
+                if (modalElement) {
+                    modalElement.addEventListener('show.bs.modal', function() {
+                        const currentStockText = this.querySelector('.form-text').textContent;
+                        const currentStock = parseInt(currentStockText.match(/\d+/)[0]);
+                        const quantityInput = this.querySelector('input[name="quantity"]');
+                        quantityInput.value = currentStock;
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Reservation - Hotel Reservation System</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <div th:replace="~{navbar :: navbar}"></div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-6">
+                    <i class="bi bi-calendar-plus text-primary"></i> New Reservation
+                </h1>
+                <p class="text-muted">Create a new restaurant reservation</p>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Reservation Form -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-plus"></i> Reservation Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/reservations}" th:object="${reservation}" method="post" novalidate>
+                            <div class="row">
+                                <!-- Customer Name -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="customerName" class="form-label">
+                                        <i class="bi bi-person"></i> Customer Name *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="customerName" 
+                                           th:field="*{customerName}"
+                                           placeholder="Enter customer name"
+                                           maxlength="100"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please provide a valid customer name.
+                                    </div>
+                                </div>
+
+                                <!-- Customer Phone -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="customerPhone" class="form-label">
+                                        <i class="bi bi-telephone"></i> Phone Number *
+                                    </label>
+                                    <input type="tel" 
+                                           class="form-control" 
+                                           id="customerPhone" 
+                                           th:field="*{customerPhone}"
+                                           placeholder="e.g., +1-555-123-4567"
+                                           pattern="[+]?[0-9\s\-()]{10,15}"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please provide a valid phone number (10-15 digits).
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Party Size -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="partySize" class="form-label">
+                                        <i class="bi bi-people"></i> Party Size *
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="partySize" 
+                                           th:field="*{partySize}"
+                                           min="1" 
+                                           max="20" 
+                                           placeholder="Number of guests"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Party size must be between 1 and 20.
+                                    </div>
+                                </div>
+
+                                <!-- Table Selection -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="table" class="form-label">
+                                        <i class="bi bi-table"></i> Table *
+                                    </label>
+                                    <select class="form-select" 
+                                            id="table" 
+                                            th:field="*{table.id}"
+                                            required>
+                                        <option value="">Select a table...</option>
+                                        <option th:each="table : ${availableTables}" 
+                                                th:value="${table.id}" 
+                                                th:text="${table.tableNumber + ' (Capacity: ' + table.capacity + ')'}">
+                                            T01 (Capacity: 4)
+                                        </option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Please select a table.
+                                    </div>
+                                    <div class="form-text">
+                                        Only available tables are shown.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Reservation Date -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="reservationDate" class="form-label">
+                                        <i class="bi bi-calendar"></i> Reservation Date *
+                                    </label>
+                                    <input type="date" 
+                                           class="form-control" 
+                                           id="reservationDate" 
+                                           th:value="${currentDate}"
+                                           min=""
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please select a valid date.
+                                    </div>
+                                </div>
+
+                                <!-- Reservation Time -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="reservationTime" class="form-label">
+                                        <i class="bi bi-clock"></i> Reservation Time *
+                                    </label>
+                                    <input type="time" 
+                                           class="form-control" 
+                                           id="reservationTime" 
+                                           th:value="${currentTime}"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please select a valid time.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hidden field for combined datetime -->
+                            <input type="hidden" 
+                                   th:field="*{reservationTime}" 
+                                   id="reservationDateTime">
+
+                            <!-- Status Selection (Optional) -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="status" class="form-label">
+                                        <i class="bi bi-flag"></i> Status
+                                    </label>
+                                    <select class="form-select" 
+                                            id="status" 
+                                            th:field="*{status}">
+                                        <option th:each="status : ${reservationStatuses}" 
+                                                th:value="${status}" 
+                                                th:text="${status.displayName}">
+                                            Pending
+                                        </option>
+                                    </select>
+                                    <div class="form-text">
+                                        Default status is Pending.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <hr class="my-4">
+                                    <div class="d-flex justify-content-between">
+                                        <a href="/reservations" class="btn btn-secondary">
+                                            <i class="bi bi-arrow-left"></i> Back to Reservations
+                                        </a>
+                                        <div>
+                                            <button type="reset" class="btn btn-outline-secondary me-2">
+                                                <i class="bi bi-arrow-clockwise"></i> Reset
+                                            </button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-check-circle"></i> Create Reservation
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="row mt-4">
+            <div class="col-md-8 mx-auto">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-info-circle text-info"></i> Reservation Guidelines
+                        </h6>
+                        <ul class="mb-0">
+                            <li>Reservations must be made for future dates and times</li>
+                            <li>Party size cannot exceed the selected table's capacity</li>
+                            <li>Only available tables are shown in the dropdown</li>
+                            <li>Phone number should be in a valid format (10-15 digits)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript for form handling -->
+    <script>
+        // Set minimum date to today
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('reservationDate').min = today;
+            
+            // Combine date and time into hidden field
+            function updateDateTime() {
+                const date = document.getElementById('reservationDate').value;
+                const time = document.getElementById('reservationTime').value;
+                if (date && time) {
+                    const dateTime = date + 'T' + time;
+                    document.getElementById('reservationDateTime').value = dateTime;
+                }
+            }
+            
+            document.getElementById('reservationDate').addEventListener('change', updateDateTime);
+            document.getElementById('reservationTime').addEventListener('change', updateDateTime);
+            
+            // Bootstrap form validation
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+        });
+    </script>
+</body>
+</html>

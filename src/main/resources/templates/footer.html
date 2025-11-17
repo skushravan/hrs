@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<footer class="bg-light border-top mt-5" th:fragment="footer">
+    <style>
+        .footer-content {
+            padding: 2rem 0;
+            background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+        }
+        .footer-logo {
+            height: 35px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        .footer-link {
+            color: #6c757d;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .footer-link:hover {
+            color: #0d6efd;
+        }
+    </style>
+    <div class="footer-content">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
+                        <img th:src="@{/images/hms-logo.png}" 
+                             alt="HMS Logo" 
+                             class="footer-logo"
+                             onerror="this.style.display='none';">
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">Hotel Reservation System</h6>
+                            <small class="text-muted">© 2025 All rights reserved</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="d-flex flex-column flex-md-row gap-3 justify-content-center justify-content-md-end align-items-center">
+                        <a href="/" class="footer-link">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                        <a href="/reservations" class="footer-link">
+                            <i class="bi bi-calendar-check"></i> Reservations
+                        </a>
+                        <a href="/staff" class="footer-link">
+                            <i class="bi bi-people"></i> Staff
+                        </a>
+                        <a href="/ratings" class="footer-link">
+                            <i class="bi bi-star-fill"></i> Ratings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
+

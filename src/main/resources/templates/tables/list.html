@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Management - Hotel Reservation System</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <div th:replace="~{navbar :: navbar}"></div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-6">
+                    <i class="bi bi-table text-primary"></i> Table Management
+                </h1>
+                <p class="text-muted">Manage restaurant tables and their status</p>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Status Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" th:text="${availableCount}">0</h4>
+                                <p class="card-text">Available Tables</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-check-circle-fill display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" th:text="${reservedCount}">0</h4>
+                                <p class="card-text">Reserved Tables</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-calendar-check-fill display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-danger">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" th:text="${occupiedCount}">0</h4>
+                                <p class="card-text">Occupied Tables</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-person-fill display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="row mb-3">
+            <div class="col">
+                <div class="btn-group" role="group">
+                    <a href="/tables" class="btn btn-outline-primary" th:classappend="${selectedStatus == null} ? ' active'">
+                        <i class="bi bi-list"></i> All Tables
+                    </a>
+                    <a href="/tables/status/AVAILABLE" class="btn btn-outline-success" th:classappend="${selectedStatus == T(com.hotel.management.enums.TableStatus).AVAILABLE} ? ' active'">
+                        <i class="bi bi-check-circle"></i> Available
+                    </a>
+                    <a href="/tables/status/RESERVED" class="btn btn-outline-warning" th:classappend="${selectedStatus == T(com.hotel.management.enums.TableStatus).RESERVED} ? ' active'">
+                        <i class="bi bi-calendar-check"></i> Reserved
+                    </a>
+                    <a href="/tables/status/OCCUPIED" class="btn btn-outline-danger" th:classappend="${selectedStatus == T(com.hotel.management.enums.TableStatus).OCCUPIED} ? ' active'">
+                        <i class="bi bi-person"></i> Occupied
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables List -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-table"></i> Restaurant Tables
+                </h5>
+                <a href="/tables/new" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add New Table
+                </a>
+            </div>
+            <div class="card-body">
+                <div th:if="${tables != null and !tables.empty}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Table Number</th>
+                                    <th>Capacity</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="table : ${tables}">
+                                    <td>
+                                        <strong th:text="${table.tableNumber}">T01</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info" th:text="${table.capacity}">4</span>
+                                    </td>
+                                    <td>
+                                        <span th:switch="${table.status}" class="badge">
+                                            <span th:case="AVAILABLE" class="badge bg-success">Available</span>
+                                            <span th:case="RESERVED" class="badge bg-warning">Reserved</span>
+                                            <span th:case="OCCUPIED" class="badge bg-danger">Occupied</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a th:href="@{/tables/{id}(id=${table.id})}" class="btn btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-gear"></i> Status
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <form th:action="@{/tables/{id}/status(id=${table.id})}" method="post" style="display: inline;">
+                                                            <input type="hidden" name="status" value="AVAILABLE">
+                                                            <button type="submit" class="dropdown-item" th:disabled="${table.status == T(com.hotel.management.enums.TableStatus).AVAILABLE}">
+                                                                <i class="bi bi-check-circle text-success"></i> Set Available
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form th:action="@{/tables/{id}/status(id=${table.id})}" method="post" style="display: inline;">
+                                                            <input type="hidden" name="status" value="RESERVED">
+                                                            <button type="submit" class="dropdown-item" th:disabled="${table.status == T(com.hotel.management.enums.TableStatus).RESERVED}">
+                                                                <i class="bi bi-calendar-check text-warning"></i> Set Reserved
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form th:action="@{/tables/{id}/status(id=${table.id})}" method="post" style="display: inline;">
+                                                            <input type="hidden" name="status" value="OCCUPIED">
+                                                            <button type="submit" class="dropdown-item" th:disabled="${table.status == T(com.hotel.management.enums.TableStatus).OCCUPIED}">
+                                                                <i class="bi bi-person text-danger"></i> Set Occupied
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div th:if="${tables == null or tables.empty}" class="text-center py-5">
+                    <i class="bi bi-table display-1 text-muted"></i>
+                    <h4 class="text-muted mt-3">No Tables Found</h4>
+                    <p class="text-muted">Start by creating your first table.</p>
+                    <a href="/tables/new" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add New Table
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <a href="/tables/new" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-circle"></i> Add New Table
+                </a>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="/reservations" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-calendar-check"></i> View Reservations
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

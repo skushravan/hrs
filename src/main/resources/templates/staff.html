@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Management - Hotel Reservation System</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .hms-logo {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+        .hms-logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+        }
+        .page-header-logo {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .navbar-brand {
+            transition: opacity 0.3s ease;
+        }
+        .navbar-brand:hover {
+            opacity: 0.9;
+        }
+        @media (max-width: 768px) {
+            .hms-logo {
+                height: 40px;
+            }
+            .page-header-logo {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div th:replace="~{navbar :: navbar}"></div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="page-header-logo">
+                    <img th:src="@{/images/hms-logo.png}" 
+                         alt="HMS Logo" 
+                         class="hms-logo"
+                         onerror="this.style.display='none';">
+                    <div>
+                        <h1 class="display-6 mb-1">
+                            <i class="bi bi-people text-primary"></i> Staff Management & Table Assignments
+                        </h1>
+                        <p class="text-muted mb-0">Manage hotel staff members and assign tables to staff</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Staff Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" th:text="${totalCount}">0</h4>
+                                <p class="card-text">Total Staff Members</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-people-fill display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" th:text="${activeCount}">0</h4>
+                                <p class="card-text">Active Staff Members</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-person-check-fill display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Staff Form -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-plus"></i> Add New Staff Member
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/staff}" th:object="${newStaff}" method="post" novalidate>
+                            <div class="row">
+                                <!-- First Name -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="firstName" class="form-label">
+                                        <i class="bi bi-person"></i> First Name *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="firstName" 
+                                           th:field="*{firstName}"
+                                           placeholder="Enter first name"
+                                           maxlength="50"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please provide a valid first name.
+                                    </div>
+                                </div>
+
+                                <!-- Last Name -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="lastName" class="form-label">
+                                        <i class="bi bi-person"></i> Last Name *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="lastName" 
+                                           th:field="*{lastName}"
+                                           placeholder="Enter last name"
+                                           maxlength="50"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please provide a valid last name.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Email -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">
+                                        <i class="bi bi-envelope"></i> Email Address *
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           th:field="*{email}"
+                                           placeholder="Enter email address"
+                                           maxlength="100"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please provide a valid email address.
+                                    </div>
+                                </div>
+
+                                <!-- Phone -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">
+                                        <i class="bi bi-telephone"></i> Phone Number
+                                    </label>
+                                    <input type="tel" 
+                                           class="form-control" 
+                                           id="phone" 
+                                           th:field="*{phone}"
+                                           placeholder="e.g., +1-555-123-4567"
+                                           pattern="[+]?[0-9\s\-()]{10,15}">
+                                    <div class="invalid-feedback">
+                                        Please provide a valid phone number.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Role -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="role" class="form-label">
+                                        <i class="bi bi-briefcase"></i> Role *
+                                    </label>
+                                    <select class="form-select" 
+                                            id="role" 
+                                            th:field="*{role}"
+                                            required>
+                                        <option value="">Select a role...</option>
+                                        <option th:each="roleOption : ${staffRoles}" 
+                                                th:value="${roleOption.name()}" 
+                                                th:text="${roleOption.displayName}">
+                                            Manager
+                                        </option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Please select a role.
+                                    </div>
+                                </div>
+
+                                <!-- Department -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="department" class="form-label">
+                                        <i class="bi bi-building"></i> Department
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="department" 
+                                           th:field="*{department}"
+                                           placeholder="Enter department"
+                                           maxlength="50">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Hire Date -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="hireDate" class="form-label">
+                                        <i class="bi bi-calendar"></i> Hire Date *
+                                    </label>
+                                    <input type="date" 
+                                           class="form-control" 
+                                           id="hireDate" 
+                                           th:field="*{hireDate}"
+                                           th:value="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please select a hire date.
+                                    </div>
+                                </div>
+
+                                <!-- Active Status -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-toggle-on"></i> Status
+                                    </label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="isActive" 
+                                               th:field="*{isActive}"
+                                               checked>
+                                        <label class="form-check-label" for="isActive">
+                                            Active Staff Member
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <hr class="my-3">
+                                    <div class="d-flex justify-content-end">
+                                        <button type="reset" class="btn btn-outline-secondary me-2">
+                                            <i class="bi bi-arrow-clockwise"></i> Reset
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-person-plus"></i> Add Staff Member
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staff List with Table Assignments -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-table"></i> Staff Members & Table Assignments
+                </h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${staff != null and !staff.empty}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Role</th>
+                                    <th>Department</th>
+                                    <th>Assigned Tables</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="member : ${staff}">
+                                    <td>
+                                        <strong th:text="${member.firstName + ' ' + member.lastName}">John Doe</strong>
+                                    </td>
+                                    <td>
+                                        <a th:href="'mailto:' + ${member.email}" th:text="${member.email}">john@example.com</a>
+                                    </td>
+                                    <td th:text="${member.phone != null ? member.phone : '-'}">+1-555-1234</td>
+                                    <td>
+                                        <span class="badge bg-info" th:text="${member.role.displayName}">Manager</span>
+                                    </td>
+                                    <td th:text="${member.department != null ? member.department : '-'}">Front Office</td>
+                                    <td>
+                                        <!-- Assigned Tables -->
+                                        <div th:if="${member.assignedTables != null and !member.assignedTables.empty}">
+                                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                                <span th:each="table : ${member.assignedTables}" 
+                                                      class="badge bg-primary">
+                                                    <i class="bi bi-table"></i>
+                                                    <span th:text="${table.tableNumber}">T01</span>
+                                                    <form th:action="@{/staff/{staffId}/unassign-table(staffId=${member.id})}" 
+                                                          method="post" 
+                                                          style="display: inline;"
+                                                          onsubmit="return confirm('Unassign table ' + '${table.tableNumber}' + '?')">
+                                                        <input type="hidden" name="tableId" th:value="${table.id}">
+                                                        <button type="submit" class="btn-close btn-close-white ms-1" 
+                                                                style="font-size: 0.6em;" 
+                                                                title="Unassign table"></button>
+                                                    </form>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div th:if="${member.assignedTables == null or member.assignedTables.empty}" class="text-muted small">
+                                            No tables assigned
+                                        </div>
+                                        
+                                        <!-- Assign Table Dropdown -->
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-success dropdown-toggle" 
+                                                    type="button" 
+                                                    data-bs-toggle="dropdown"
+                                                    th:disabled="${allTables == null or allTables.empty}">
+                                                <i class="bi bi-plus-circle"></i> Assign Table
+                                            </button>
+                                            <ul class="dropdown-menu" style="max-height: 200px; overflow-y: auto;">
+                                                <li th:each="table : ${allTables}">
+                                                    <form th:action="@{/staff/{staffId}/assign-table(staffId=${member.id})}" 
+                                                          method="post" 
+                                                          style="display: inline;">
+                                                        <input type="hidden" name="tableId" th:value="${table.id}">
+                                                        <button type="submit" 
+                                                                class="dropdown-item"
+                                                                th:disabled="${member.assignedTables != null and member.assignedTables.?[id == table.id].size() > 0}">
+                                                            <i class="bi bi-table"></i>
+                                                            <span th:text="'Table ' + ${table.tableNumber} + ' (Capacity: ' + ${table.capacity} + ')'">Table T01</span>
+                                                            <span th:if="${member.assignedTables != null and member.assignedTables.?[id == table.id].size() > 0}" 
+                                                                  class="badge bg-secondary ms-2">Assigned</span>
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li th:if="${allTables == null or allTables.empty}">
+                                                    <span class="dropdown-item text-muted">No tables available</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span th:if="${member.isActive}" class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Active
+                                        </span>
+                                        <span th:if="${!member.isActive}" class="badge bg-secondary">
+                                            <i class="bi bi-x-circle"></i> Inactive
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a th:href="@{/staff/{id}(id=${member.id})}" class="btn btn-outline-primary" title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a th:href="@{/staff/{id}/edit(id=${member.id})}" class="btn btn-outline-info" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-gear"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <form th:action="@{/staff/{id}/toggle-status(id=${member.id})}" method="post" style="display: inline;">
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i th:class="${member.isActive ? 'bi bi-pause-circle text-warning' : 'bi bi-play-circle text-success'}"></i>
+                                                                <span th:text="${member.isActive ? 'Deactivate' : 'Activate'}">Toggle Status</span>
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div th:if="${staff == null or staff.empty}" class="text-center py-5">
+                    <i class="bi bi-people display-1 text-muted"></i>
+                    <h4 class="text-muted mt-3">No Staff Members Found</h4>
+                    <p class="text-muted">Start by adding your first staff member.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <a href="/tables" class="btn btn-outline-info btn-lg">
+                    <i class="bi bi-table"></i> Manage Tables
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="/reservations" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-calendar-check"></i> View Reservations
+                </a>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="/" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-house"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript for staff management -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+
+            // Bootstrap form validation
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+
+            // Set default hire date to today
+            const hireDateInput = document.getElementById('hireDate');
+            if (hireDateInput && !hireDateInput.value) {
+                const today = new Date().toISOString().split('T')[0];
+                hireDateInput.value = today;
+            }
+        });
+    </script>
+    
+    <!-- Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+</body>
+</html>

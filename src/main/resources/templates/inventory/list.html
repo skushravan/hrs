@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Inventory</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}" />
+</head>
+<body>
+<div th:replace="~{navbar :: navbar}"></div>
+<h1>Inventory</h1>
+
+<div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+<a th:href="@{/inventory/new}">Add Item</a>
+<a th:href="@{/inventory/low-stock}" style="margin-left:12px;">View Low Stock</a>
+
+<div th:if="${lowStockOnly}"><h3>Low Stock Items</h3></div>
+
+<table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Quantity</th>
+        <th>Unit</th>
+        <th>Low Threshold</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item : ${items}">
+        <td th:text="${item.name}"></td>
+        <td th:text="${item.category}"></td>
+        <td th:text="${item.quantity}"></td>
+        <td th:text="${item.unit}"></td>
+        <td th:text="${item.lowStockThreshold}"></td>
+        <td>
+            <span th:text="${item.lowStock ? 'LOW' : 'OK'}"
+                  th:classappend="${item.lowStock} ? 'text-danger' : 'text-success'"></span>
+        </td>
+        <td>
+            <a th:href="@{'/inventory/' + ${item.id}}">Details</a>
+            <form th:action="@{'/inventory/' + ${item.id} + '/delete'}" method="post" style="display:inline;">
+                <button type="submit" onclick="return confirm('Delete this item?');">Delete</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+    <tbody th:if="${items} == null or #lists.isEmpty(items)">
+    <tr><td colspan="7">No items found.</td></tr>
+    </tbody>
+    <tbody th:if="${lowStockOnly} and (items == null or #lists.isEmpty(items))">
+    <tr><td colspan="7">No low stock items.</td></tr>
+    </tbody>
+    <tbody th:if="${lowStockItems} != null and !#lists.isEmpty(lowStockItems)">
+    <tr><td colspan="7"><strong>Low stock alerts:</strong></td></tr>
+    <tr th:each="i : ${lowStockItems}">
+        <td colspan="7" th:text="${i.name + ' is low (' + i.quantity + ' ' + i.unit + ')'}"></td>
+    </tr>
+    </tbody>
+    </table>
+
+</body>
+</html>
+
+

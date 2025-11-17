@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management - Hotel Reservation System</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <div th:replace="~{navbar :: navbar}"></div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-6">
+                    <i class="bi bi-list-check text-primary"></i> Task Management
+                </h1>
+                <p class="text-muted">Manage and track hotel tasks and assignments</p>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Task Statistics -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body text-center">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" th:text="${pendingCount}">0</h4>
+                                <p class="card-text">Pending</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-clock-fill display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body text-center">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" th:text="${inProgressCount}">0</h4>
+                                <p class="card-text">In Progress</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-arrow-repeat display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body text-center">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" th:text="${completedCount}">0</h4>
+                                <p class="card-text">Completed</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-check-circle-fill display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body text-center">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title" th:text="${totalCount}">0</h4>
+                                <p class="card-text">Total Tasks</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-list-ul display-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Task Form -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-plus-circle"></i> Create New Task
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/tasks}" th:object="${task}" method="post" novalidate>
+                            <div class="row">
+                                <!-- Task Title -->
+                                <div class="col-md-8 mb-3">
+                                    <label for="title" class="form-label">
+                                        <i class="bi bi-card-text"></i> Task Title *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="title" 
+                                           th:field="*{title}"
+                                           placeholder="Enter task title"
+                                           maxlength="100"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Please provide a task title.
+                                    </div>
+                                </div>
+
+                                <!-- Priority -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="priority" class="form-label">
+                                        <i class="bi bi-flag"></i> Priority
+                                    </label>
+                                    <select class="form-select" 
+                                            id="priority" 
+                                            th:field="*{priority}">
+                                        <option value="">Select priority...</option>
+                                        <option value="1">1 - Low</option>
+                                        <option value="2">2 - Medium</option>
+                                        <option value="3">3 - High</option>
+                                        <option value="4">4 - Urgent</option>
+                                        <option value="5">5 - Critical</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Task Description -->
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="description" class="form-label">
+                                        <i class="bi bi-text-paragraph"></i> Description
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="description" 
+                                              th:field="*{description}"
+                                              rows="3" 
+                                              placeholder="Enter task description"
+                                              maxlength="1000"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Assigned Staff -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="assignedStaff" class="form-label">
+                                        <i class="bi bi-person"></i> Assign To
+                                    </label>
+                                    <select class="form-select" 
+                                            id="assignedStaff" 
+                                            th:field="*{assignedStaff.id}">
+                                        <option value="">Select staff member...</option>
+                                        <option th:each="staff : ${staff}" 
+                                                th:value="${staff.id}" 
+                                                th:text="${staff.firstName + ' ' + staff.lastName + ' (' + staff.role.displayName + ')'}">
+                                            John Doe (Manager)
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <!-- Due Date -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="dueDate" class="form-label">
+                                        <i class="bi bi-calendar"></i> Due Date
+                                    </label>
+                                    <input type="date" 
+                                           class="form-control" 
+                                           id="dueDate" 
+                                           th:field="*{dueDate}">
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <hr class="my-3">
+                                    <div class="d-flex justify-content-end">
+                                        <button type="reset" class="btn btn-outline-secondary me-2">
+                                            <i class="bi bi-arrow-clockwise"></i> Reset
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle"></i> Create Task
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter and Actions -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="btn-group" role="group">
+                    <a href="/tasks" class="btn btn-outline-primary" th:classappend="${selectedStatus == null} ? ' active'">
+                        <i class="bi bi-list"></i> All Tasks
+                    </a>
+                    <a href="/tasks/status/PENDING" class="btn btn-outline-warning" th:classappend="${selectedStatus == T(com.hotel.management.enums.TaskStatus).PENDING} ? ' active'">
+                        <i class="bi bi-clock"></i> Pending
+                    </a>
+                    <a href="/tasks/status/IN_PROGRESS" class="btn btn-outline-info" th:classappend="${selectedStatus == T(com.hotel.management.enums.TaskStatus).IN_PROGRESS} ? ' active'">
+                        <i class="bi bi-arrow-repeat"></i> In Progress
+                    </a>
+                    <a href="/tasks/status/COMPLETED" class="btn btn-outline-success" th:classappend="${selectedStatus == T(com.hotel.management.enums.TaskStatus).COMPLETED} ? ' active'">
+                        <i class="bi bi-check-circle"></i> Completed
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="/staff" class="btn btn-outline-secondary">
+                    <i class="bi bi-people"></i> Manage Staff
+                </a>
+            </div>
+        </div>
+
+        <!-- Tasks List -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-table"></i> Tasks
+                    <span th:if="${selectedStatus != null}" class="badge bg-primary ms-2" th:text="${selectedStatus.displayName}">Status</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${tasks != null and !tasks.empty}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Assigned To</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Due Date</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="task : ${tasks}">
+                                    <td>
+                                        <strong th:text="${task.title}">Task Title</strong>
+                                    </td>
+                                    <td>
+                                        <span th:if="${task.description != null and !task.description.isEmpty()}" 
+                                              th:text="${#strings.abbreviate(task.description, 50)}">Task description...</span>
+                                        <span th:if="${task.description == null or task.description.isEmpty()}" 
+                                              class="text-muted">No description</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${task.assignedStaff != null}" 
+                                              th:text="${task.assignedStaff.firstName + ' ' + task.assignedStaff.lastName}">John Doe</span>
+                                        <span th:if="${task.assignedStaff == null}" 
+                                              class="text-muted">Unassigned</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${task.priority != null}" 
+                                              th:class="${'badge bg-' + (task.priority >= 4 ? 'danger' : task.priority >= 3 ? 'warning' : 'info')}"
+                                              th:text="${task.priority}">3</span>
+                                        <span th:if="${task.priority == null}" 
+                                              class="text-muted">-</span>
+                                    </td>
+                                    <td>
+                                        <span th:switch="${task.status}" class="badge">
+                                            <span th:case="PENDING" class="badge bg-warning">Pending</span>
+                                            <span th:case="IN_PROGRESS" class="badge bg-info">In Progress</span>
+                                            <span th:case="COMPLETED" class="badge bg-success">Completed</span>
+                                            <span th:case="CANCELLED" class="badge bg-danger">Cancelled</span>
+                                            <span th:case="ON_HOLD" class="badge bg-secondary">On Hold</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${task.dueDate != null}" 
+                                              th:text="${#temporals.format(task.dueDate, 'MMM dd, yyyy')}">Jan 15, 2024</span>
+                                        <span th:if="${task.dueDate == null}" 
+                                              class="text-muted">No due date</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(task.createdAt, 'MMM dd, yyyy')}">Jan 15, 2024</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a th:href="@{/tasks/{id}(id=${task.id})}" class="btn btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-gear"></i> Manage
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <button class="dropdown-item" data-bs-toggle="modal" th:data-bs-target="'#statusModal' + ${task.id}">
+                                                            <i class="bi bi-arrow-repeat text-info"></i> Change Status
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button class="dropdown-item" data-bs-toggle="modal" th:data-bs-target="'#assignModal' + ${task.id}">
+                                                            <i class="bi bi-person-plus text-success"></i> Assign Staff
+                                                        </button>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <form th:action="@{/tasks/{id}/delete(id=${task.id})}" method="post" style="display: inline;" 
+                                                              onsubmit="return confirm('Are you sure you want to delete this task?')">
+                                                            <button type="submit" class="dropdown-item text-danger">
+                                                                <i class="bi bi-trash"></i> Delete
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div th:if="${tasks == null or tasks.empty}" class="text-center py-5">
+                    <i class="bi bi-list-check display-1 text-muted"></i>
+                    <h4 class="text-muted mt-3">No Tasks Found</h4>
+                    <p class="text-muted">Start by creating your first task.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <a href="/staff" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-people"></i> Manage Staff
+                </a>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="/reservations" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-calendar-check"></i> View Reservations
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Management Modals -->
+    <div th:each="task : ${tasks}" th:if="${tasks != null and !tasks.empty}">
+        <!-- Status Change Modal -->
+        <div class="modal fade" th:id="'statusModal' + ${task.id}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-arrow-repeat text-info"></i> Change Status - <span th:text="${task.title}">Task</span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/tasks/{id}/status(id=${task.id})}" method="post">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">New Status</label>
+                                <select class="form-select" name="status" required>
+                                    <option th:each="status : ${taskStatuses}" 
+                                            th:value="${status}" 
+                                            th:text="${status.displayName}"
+                                            th:selected="${status == task.status}">
+                                        Pending
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-info">
+                                <i class="bi bi-arrow-repeat"></i> Update Status
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assign Staff Modal -->
+        <div class="modal fade" th:id="'assignModal' + ${task.id}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-person-plus text-success"></i> Assign Staff - <span th:text="${task.title}">Task</span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/tasks/{id}/assign(id=${task.id})}" method="post">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="staffId" class="form-label">Assign To</label>
+                                <select class="form-select" name="staffId">
+                                    <option value="">Unassign</option>
+                                    <option th:each="staff : ${staff}" 
+                                            th:value="${staff.id}" 
+                                            th:text="${staff.firstName + ' ' + staff.lastName + ' (' + staff.role.displayName + ')'}"
+                                            th:selected="${task.assignedStaff != null and task.assignedStaff.id == staff.id}">
+                                        John Doe (Manager)
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-person-plus"></i> Assign
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript for task management -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+
+            // Bootstrap form validation
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                });
+            }
+
+            // Set default due date to tomorrow
+            const dueDateInput = document.getElementById('dueDate');
+            if (dueDateInput && !dueDateInput.value) {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                dueDateInput.value = tomorrow.toISOString().split('T')[0];
+            }
+        });
+    </script>
+    
+    <!-- Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+</body>
+</html>
