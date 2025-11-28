@@ -32,6 +32,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByReservationTimeBetween(LocalDateTime startTime, LocalDateTime endTime);
 
     /**
+     * Find reservations that are not in a specific status
+     * @param status status that should be excluded
+     * @return list of reservations without the provided status
+     */
+    List<Reservation> findByStatusNot(ReservationStatus status);
+
+    /**
      * Find reservations by status and within a date range
      * @param status the reservation status to search for
      * @param startTime the start of the time range (inclusive)

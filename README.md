@@ -319,10 +319,9 @@ This project is a proof of concept.
 
 ## 👥 Authors
 
-- **Development Team** - Shravan Kumar(NNM23CS188)
-                          Srujan Bangera(NNM23CS205)
-                          Siri Udaya Shetty(NNM23CS203)
-                          Shreyas (NNM23CS192)
+- **Development Team** -
+ Shravan Kumar
+                          
 
 ## 🙏 Acknowledgments
 

@@ -10,11 +10,14 @@ import com.hotel.management.service.ReservationService;
 import com.hotel.management.service.StaffService;
 import com.hotel.management.service.TableService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,7 +37,37 @@ public class HomeController {
     private RatingService ratingService;
 
     @GetMapping({"/", "/home"})
-    public String home(Model model) {
+    public String home(Model model, Authentication authentication) {
+        // Redirect to role-specific dashboard if user is authenticated
+        if (authentication != null && authentication.isAuthenticated()) {
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+            
+            // Check for ADMIN role (highest priority)
+            for (GrantedAuthority authority : authorities) {
+                String role = authority.getAuthority();
+                if (role.equals("ROLE_ADMIN")) {
+                    return "redirect:/admin/dashboard";
+                }
+            }
+            
+            // Check for STAFF role (includes ROLE_STAFF, ROLE_MANAGER, ROLE_RECEPTIONIST)
+            for (GrantedAuthority authority : authorities) {
+                String role = authority.getAuthority();
+                if (role.equals("ROLE_STAFF") || role.equals("ROLE_MANAGER") || role.equals("ROLE_RECEPTIONIST")) {
+                    return "redirect:/staff/dashboard";
+                }
+            }
+            
+            // Check for CUSTOMER role (ROLE_USER)
+            for (GrantedAuthority authority : authorities) {
+                String role = authority.getAuthority();
+                if (role.equals("ROLE_USER")) {
+                    return "redirect:/customer/dashboard";
+                }
+            }
+        }
+        
+        // If not authenticated or no matching role, show default dashboard
         try {
             // Get dashboard statistics
             LocalDate today = LocalDate.now();
@@ -77,8 +110,8 @@ model.addAttribute("recentRatings", ratingService.getApprovedRatings().stream().
     }
 
     @GetMapping("/index")
-    public String index(Model model) {
-        return home(model);
+    public String index(Model model, Authentication authentication) {
+        return home(model, authentication);
     }
 }
 

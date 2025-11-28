@@ -4,8 +4,11 @@ import com.hotel.management.entity.Reservation;
 import com.hotel.management.entity.InventoryItem;
 import com.hotel.management.entity.InventoryTransaction;
 import com.hotel.management.entity.RestaurantTable;
+import com.hotel.management.entity.User;
 import com.hotel.management.enums.ReservationStatus;
 import com.hotel.management.enums.TableStatus;
+import com.hotel.management.enums.UserRole;
+import com.hotel.management.repository.UserRepository;
 import com.hotel.management.service.ReservationService;
 import com.hotel.management.service.TableService;
 import com.hotel.management.service.InventoryService;
@@ -14,11 +17,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * DataLoader component to pre-populate the database with sample data
@@ -41,6 +46,12 @@ public class DataLoader {
     @Autowired
     private InventoryService inventoryService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     /**
      * Event listener that runs after the application is ready
      * Loads sample data into the database
@@ -50,6 +61,9 @@ public class DataLoader {
         logger.info("Starting to load sample data...");
         
         try {
+            // Load sample users (should be loaded first)
+            loadSampleUsers();
+            
             // Load sample tables
             loadSampleTables();
             
@@ -63,6 +77,85 @@ public class DataLoader {
             
         } catch (Exception e) {
             logger.error("Error loading sample data: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Creates sample users with different roles for testing
+     * 
+     * Default password for all test users: password123
+     * 
+     * Test Users:
+     * - admin / password123 (ROLE_ADMIN)
+     * - manager / password123 (ROLE_MANAGER)
+     * - receptionist / password123 (ROLE_RECEPTIONIST)
+     * - staff / password123 (ROLE_STAFF)
+     * - user / password123 (ROLE_USER)
+     */
+    private void loadSampleUsers() {
+        logger.info("Loading sample users...");
+        
+        try {
+            // Admin user
+            createUserIfNotExists("admin", "password123", "admin@hotel.com", 
+                "Admin", "User", Set.of(UserRole.ROLE_ADMIN));
+            
+            // Manager user
+            createUserIfNotExists("manager", "password123", "manager@hotel.com", 
+                "Manager", "User", Set.of(UserRole.ROLE_MANAGER));
+            
+            // Receptionist user
+            createUserIfNotExists("receptionist", "password123", "receptionist@hotel.com", 
+                "Receptionist", "User", Set.of(UserRole.ROLE_RECEPTIONIST));
+            
+            // Staff user
+            createUserIfNotExists("staff", "password123", "staff@hotel.com", 
+                "Staff", "User", Set.of(UserRole.ROLE_STAFF));
+            
+            // Regular user
+            createUserIfNotExists("user", "password123", "user@hotel.com", 
+                "Regular", "User", Set.of(UserRole.ROLE_USER));
+            
+            logger.info("Sample users loaded successfully!");
+            logger.info("=== Test User Credentials ===");
+            logger.info("Username: admin, Password: password123 (ROLE_ADMIN)");
+            logger.info("Username: manager, Password: password123 (ROLE_MANAGER)");
+            logger.info("Username: receptionist, Password: password123 (ROLE_RECEPTIONIST)");
+            logger.info("Username: staff, Password: password123 (ROLE_STAFF)");
+            logger.info("Username: user, Password: password123 (ROLE_USER)");
+            logger.info("=============================");
+            
+        } catch (Exception e) {
+            logger.error("Error creating sample users: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Helper method to create a user if it doesn't already exist
+     */
+    private void createUserIfNotExists(String username, String password, String email, 
+                                     String firstName, String lastName, Set<UserRole> roles) {
+        try {
+            if (!userRepository.existsByUsername(username)) {
+                User user = new User();
+                user.setUsername(username);
+                user.setPassword(passwordEncoder.encode(password)); // Hash the password
+                user.setEmail(email);
+                user.setFirstName(firstName);
+                user.setLastName(lastName);
+                user.setRoles(roles);
+                user.setEnabled(true);
+                user.setAccountNonExpired(true);
+                user.setAccountNonLocked(true);
+                user.setCredentialsNonExpired(true);
+                
+                userRepository.save(user);
+                logger.info("Created user: {}", username);
+            } else {
+                logger.info("User {} already exists, skipping...", username);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to create user {}: {}", username, e.getMessage());
         }
     }
 
@@ -117,18 +210,18 @@ public class DataLoader {
 
             // Create sample reservations with proper bounds checking
             List<Reservation> sampleReservations = Arrays.asList(
-                createReservation("John Smith", "+1-555-0101", availableTables.get(0), 
+                createReservation("Udaya Shetty", "+91 9876543210", availableTables.get(0), 
                     LocalDateTime.now().plusHours(2), 2, ReservationStatus.CONFIRMED),
-                createReservation("Sarah Johnson", "+1-555-0102", 
+                createReservation("Shivananda Bangera", "+91 9611693320", 
                     availableTables.size() > 1 ? availableTables.get(1) : availableTables.get(0), 
                     LocalDateTime.now().plusHours(3), 4, ReservationStatus.PENDING),
-                createReservation("Mike Davis", "+1-555-0103", 
+                createReservation("Santosh Naik", "+91 7795074320", 
                     availableTables.size() > 2 ? availableTables.get(2) : availableTables.get(0), 
                     LocalDateTime.now().plusDays(1), 6, ReservationStatus.CONFIRMED),
-                createReservation("Emily Wilson", "+1-555-0104", 
+                createReservation("Gopal Achar", "+91 8105649828", 
                     availableTables.size() > 3 ? availableTables.get(3) : availableTables.get(0), 
                     LocalDateTime.now().plusDays(1).plusHours(2), 2, ReservationStatus.PENDING),
-                createReservation("David Brown", "+1-555-0105", 
+                createReservation("Vittal Kanchan", "+91 9900123456", 
                     availableTables.size() > 4 ? availableTables.get(4) : availableTables.get(0), 
                     LocalDateTime.now().plusDays(2), 4, ReservationStatus.CONFIRMED)
             );
@@ -218,4 +311,5 @@ public class DataLoader {
         reservation.setStatus(status);
         return reservation;
     }
+    
 }

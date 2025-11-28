@@ -147,6 +147,49 @@ public class ReservationService {
     }
 
     /**
+     * Get reservations that should remain in the active queue (non-completed)
+     */
+    public List<Reservation> getActiveReservations() {
+        try {
+            return reservationRepository.findByStatusNot(ReservationStatus.COMPLETED);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load active reservations: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get completed reservations optionally filtered by date
+     */
+    public List<Reservation> getCompletedReservations(LocalDate date) {
+        try {
+            if (date == null) {
+                return reservationRepository.findByStatus(ReservationStatus.COMPLETED);
+            }
+
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+            return reservationRepository.findByStatusAndReservationTimeBetween(
+                    ReservationStatus.COMPLETED,
+                    startOfDay,
+                    endOfDay
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load completed reservations: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Count reservations by status
+     */
+    public long countReservationsByStatus(ReservationStatus status) {
+        try {
+            return reservationRepository.countByStatus(status);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to count reservations: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Get a reservation by ID
      * @param id the reservation ID
      * @return the reservation if found

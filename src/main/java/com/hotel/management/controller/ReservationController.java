@@ -8,6 +8,7 @@ import com.hotel.management.service.TableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Controller for handling reservation-related web requests
@@ -40,11 +42,18 @@ public class ReservationController {
  * Display all reservations
  */
 @GetMapping
-public String getAllReservations(Model model) {
+public String getAllReservations(
+        @RequestParam(value = "completedDate", required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate completedDate,
+        Model model) {
     try {
-        // Use getReservationsByStatus(null) instead of getAllReservations()
-        List<Reservation> reservations = reservationService.getReservationsByStatus(null);
-        model.addAttribute("reservations", reservations);
+        List<Reservation> activeReservations = reservationService.getActiveReservations();
+        List<Reservation> completedReservations = reservationService.getCompletedReservations(completedDate);
+
+        model.addAttribute("reservations", activeReservations);
+        model.addAttribute("completedReservations", completedReservations);
+        model.addAttribute("completedDate", completedDate);
+        model.addAttribute("completedCount", reservationService.countReservationsByStatus(ReservationStatus.COMPLETED));
         model.addAttribute("currentDate", LocalDate.now());
         return "reservations";
     } catch (Exception e) {
@@ -185,10 +194,22 @@ public String getAllReservations(Model model) {
     @GetMapping("/today")
     public String getTodayReservations(Model model) {
         try {
-            List<Reservation> reservations = reservationService.getReservationsForDate(LocalDate.now());
-            model.addAttribute("reservations", reservations);
-            model.addAttribute("selectedDate", LocalDate.now());
-            model.addAttribute("currentDate", LocalDate.now());
+            LocalDate today = LocalDate.now();
+            List<Reservation> reservations = reservationService.getReservationsForDate(today);
+
+            List<Reservation> activeToday = reservations.stream()
+                    .filter(res -> res.getStatus() != ReservationStatus.COMPLETED)
+                    .collect(Collectors.toList());
+            List<Reservation> completedToday = reservations.stream()
+                    .filter(res -> res.getStatus() == ReservationStatus.COMPLETED)
+                    .collect(Collectors.toList());
+
+            model.addAttribute("reservations", activeToday);
+            model.addAttribute("completedReservations", completedToday);
+            model.addAttribute("completedDate", today);
+            model.addAttribute("selectedDate", today);
+            model.addAttribute("completedCount", reservationService.countReservationsByStatus(ReservationStatus.COMPLETED));
+            model.addAttribute("currentDate", today);
             return "reservations";
         } catch (Exception e) {
             model.addAttribute("error", "Failed to load today's reservations: " + e.getMessage());

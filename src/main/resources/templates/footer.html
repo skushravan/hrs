@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <footer class="bg-light border-top mt-5" th:fragment="footer">
     <style>
@@ -39,18 +39,47 @@
                 </div>
                 <div class="col-md-6 text-center text-md-end">
                     <div class="d-flex flex-column flex-md-row gap-3 justify-content-center justify-content-md-end align-items-center">
-                        <a href="/" class="footer-link">
-                            <i class="bi bi-house"></i> Home
-                        </a>
-                        <a href="/reservations" class="footer-link">
-                            <i class="bi bi-calendar-check"></i> Reservations
-                        </a>
-                        <a href="/staff" class="footer-link">
-                            <i class="bi bi-people"></i> Staff
-                        </a>
-                        <a href="/ratings" class="footer-link">
-                            <i class="bi bi-star-fill"></i> Ratings
-                        </a>
+                        <div sec:authorize="hasRole('ADMIN')">
+                            <a href="/" class="footer-link me-md-3 d-block d-md-inline">
+                                <i class="bi bi-house"></i> Home
+                            </a>
+                            <a href="/reservations" class="footer-link me-md-3 d-block d-md-inline">
+                                <i class="bi bi-calendar-check"></i> Reservations
+                            </a>
+                            <a href="/staff" class="footer-link me-md-3 d-block d-md-inline">
+                                <i class="bi bi-people"></i> Staff
+                            </a>
+                            <a href="/inventory" class="footer-link me-md-3 d-block d-md-inline">
+                                <i class="bi bi-box-seam"></i> Inventory
+                            </a>
+                            <a href="/tasks" class="footer-link me-md-3 d-block d-md-inline">
+                                <i class="bi bi-list-check"></i> Tasks
+                            </a>
+                            <a href="/ratings" class="footer-link d-block d-md-inline">
+                                <i class="bi bi-star-fill"></i> Ratings
+                            </a>
+                        </div>
+
+                        <div sec:authorize="!hasRole('ADMIN') and (hasRole('STAFF') or hasRole('RECEPTIONIST') or hasRole('MANAGER'))">
+                            <a href="/" class="footer-link me-md-3 d-block d-md-inline">
+                                <i class="bi bi-house"></i> Home
+                            </a>
+                            <a href="/reservations" class="footer-link d-block d-md-inline">
+                                <i class="bi bi-calendar-check"></i> Reservations
+                            </a>
+                        </div>
+
+                        <div sec:authorize="!hasRole('ADMIN') and !hasRole('STAFF') and (hasRole('CUSTOMER') or hasRole('USER'))">
+                            <span class="text-muted small d-block">
+                                Need help? <a href="/contact" class="footer-link">Contact support</a>
+                            </span>
+                        </div>
+
+                        <div sec:authorize="isAnonymous()">
+                            <a href="/login" class="footer-link">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

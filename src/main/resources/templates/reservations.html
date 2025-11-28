@@ -63,45 +63,45 @@
             </div>
             <div class="card-body">
                 <div class="d-flex flex-wrap gap-2">
-                    <span class="badge filter-badge bg-secondary" onclick="filterByStatus('ALL')">
+                    <span class="badge filter-badge bg-secondary" data-filter-status="ALL" onclick="filterByStatus(this.dataset.filterStatus)">
                         All <span class="badge bg-light text-dark" th:text="${reservations != null ? reservations.size() : 0}">0</span>
                     </span>
-                    <span class="badge filter-badge bg-warning" onclick="filterByStatus('PENDING')">
+                    <span class="badge filter-badge bg-warning" data-filter-status="PENDING" onclick="filterByStatus(this.dataset.filterStatus)">
                         Pending <span class="badge bg-light text-dark" th:text="${reservations != null ? #lists.size(reservations.?[status.name() == 'PENDING']) : 0}">0</span>
                     </span>
-                    <span class="badge filter-badge bg-success" onclick="filterByStatus('CONFIRMED')">
+                    <span class="badge filter-badge bg-success" data-filter-status="CONFIRMED" onclick="filterByStatus(this.dataset.filterStatus)">
                         Confirmed <span class="badge bg-light text-dark" th:text="${reservations != null ? #lists.size(reservations.?[status.name() == 'CONFIRMED']) : 0}">0</span>
                     </span>
-                    <span class="badge filter-badge bg-info" onclick="filterByStatus('SEATED')">
+                    <span class="badge filter-badge bg-info" data-filter-status="SEATED" onclick="filterByStatus(this.dataset.filterStatus)">
                         Seated <span class="badge bg-light text-dark" th:text="${reservations != null ? #lists.size(reservations.?[status.name() == 'SEATED']) : 0}">0</span>
                     </span>
-                    <span class="badge filter-badge bg-primary" onclick="filterByStatus('IN_SERVICE')">
+                    <span class="badge filter-badge bg-primary" data-filter-status="IN_SERVICE" onclick="filterByStatus(this.dataset.filterStatus)">
                         In Service <span class="badge bg-light text-dark" th:text="${reservations != null ? #lists.size(reservations.?[status.name() == 'IN_SERVICE']) : 0}">0</span>
                     </span>
-                    <span class="badge filter-badge bg-secondary" onclick="filterByStatus('COMPLETED')">
-                        Completed <span class="badge bg-light text-dark" th:text="${reservations != null ? #lists.size(reservations.?[status.name() == 'COMPLETED']) : 0}">0</span>
-                    </span>
-                    <span class="badge filter-badge bg-danger" onclick="filterByStatus('CANCELLED')">
+                    <a class="badge filter-badge bg-secondary text-decoration-none" href="#completed-reservations-card">
+                        Completed <span class="badge bg-light text-dark" th:text="${completedCount != null ? completedCount : 0}">0</span>
+                    </a>
+                    <span class="badge filter-badge bg-danger" data-filter-status="CANCELLED" onclick="filterByStatus(this.dataset.filterStatus)">
                         Cancelled <span class="badge bg-light text-dark" th:text="${reservations != null ? #lists.size(reservations.?[status.name() == 'CANCELLED']) : 0}">0</span>
                     </span>
                 </div>
             </div>
         </div>
 
-        <!-- Reservations Content -->
+        <!-- Active Reservations Content -->
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
-                    <i class="bi bi-table"></i> Reservations List
+                    <i class="bi bi-table"></i> Active Reservations
                 </h5>
                 <div>
-                    <span class="badge bg-light text-dark" th:text="${reservations != null ? reservations.size() : 0}">0</span> reservations
+                    <span class="badge bg-light text-dark" th:text="${reservations != null ? reservations.size() : 0}">0</span> active
                 </div>
             </div>
             <div class="card-body">
                 <div th:if="${reservations != null and !reservations.empty}">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover" id="active-reservations-table">
                             <thead class="table-light">
                                 <tr>
                                     <th>ID</th>
@@ -189,14 +189,14 @@
                                             <div th:if="${reservation.status.name() == 'IN_SERVICE'}">
                                                 <form th:action="@{/reservations/{id}/status(id=${reservation.id})}" method="post" style="display: inline;">
                                                     <input type="hidden" name="status" value="COMPLETED">
-                                                    <button type="submit" class="btn btn-secondary btn-sm" title="Mark as Completed">
+                                                    <button type="submit" class="btn btn-secondary btn-sm" title="Move to Completed">
                                                         <i class="bi bi-check2-all"></i> Complete
                                                     </button>
                                                 </form>
                                             </div>
                                             
-                                            <!-- COMPLETED/CANCELLED - No actions -->
-                                            <div th:if="${reservation.status.name() == 'COMPLETED' or reservation.status.name() == 'CANCELLED'}">
+                                            <!-- CANCELLED - No actions -->
+                                            <div th:if="${reservation.status.name() == 'CANCELLED'}">
                                                 <span class="text-muted small">No actions</span>
                                             </div>
                                         </div>
@@ -208,11 +208,85 @@
                 </div>
                 <div th:if="${reservations == null or reservations.empty}" class="text-center py-5">
                     <i class="bi bi-calendar-x display-1 text-muted"></i>
-                    <h4 class="text-muted mt-3">No Reservations Found</h4>
+                    <h4 class="text-muted mt-3">No Active Reservations</h4>
                     <p class="text-muted">Start by creating your first reservation.</p>
                     <a href="/reservations/new" class="btn btn-primary">
                         <i class="bi bi-plus-circle"></i> Create Reservation
                     </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed Reservations -->
+        <div class="card mt-4" id="completed-reservations-card">
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-check2-circle"></i> Completed Reservations
+                    </h5>
+                    <small class="text-muted">Completed reservations are moved here automatically</small>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-success" th:text="${completedCount != null ? completedCount : 0}">0</span> total
+                </div>
+            </div>
+            <div class="card-body">
+                <form class="row gy-2 gx-2 align-items-end mb-3" method="get" action="/reservations">
+                    <div class="col-sm-4 col-md-3">
+                        <label for="completedDate" class="form-label mb-0">Filter by date</label>
+                        <input type="date" id="completedDate" name="completedDate" class="form-control"
+                               th:value="${completedDate != null ? completedDate : ''}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-funnel"></i> Apply
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <a href="/reservations" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </a>
+                    </div>
+                    <div class="col-auto ms-auto" th:if="${completedDate != null}">
+                        <span class="badge bg-light text-dark">Showing <span th:text="${#temporals.format(completedDate, 'MMM dd, yyyy')}"></span></span>
+                    </div>
+                </form>
+
+                <div th:if="${completedReservations != null and !completedReservations.empty}">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="completed-reservations-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Customer</th>
+                                    <th>Table</th>
+                                    <th>Reservation Time</th>
+                                    <th>Party Size</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="reservation : ${completedReservations}">
+                                    <td th:text="${reservation.id}"></td>
+                                    <td>
+                                        <strong th:text="${reservation.customerName}"></strong>
+                                        <br>
+                                        <small class="text-muted" th:text="${reservation.customerPhone}"></small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info" th:text="${reservation.table.tableNumber}"></span>
+                                    </td>
+                                    <td th:text="${#temporals.format(reservation.reservationTime, 'MMM dd, yyyy HH:mm')}"></td>
+                                    <td>
+                                        <span class="badge bg-secondary" th:text="${reservation.partySize}"></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div th:if="${completedReservations == null or completedReservations.empty}" class="text-center py-4 text-muted">
+                    <i class="bi bi-inboxes display-5"></i>
+                    <p class="mt-2 mb-0">No completed reservations found for the selected criteria.</p>
                 </div>
             </div>
         </div>
@@ -241,40 +315,32 @@
     <!-- Custom JavaScript -->
     <script>
         function filterByStatus(status) {
-            if (status === 'ALL') {
-                // Show all rows
-                document.querySelectorAll('tbody tr').forEach(row => {
-                    row.style.display = '';
-                });
-            } else {
-                // Show only rows with matching status
-                document.querySelectorAll('tbody tr').forEach(row => {
-                    const statusCell = row.querySelector('td:nth-child(7) span[data-status]');
-                    if (statusCell && statusCell.getAttribute('data-status') === status) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
+            const rows = document.querySelectorAll('#active-reservations-table tbody tr');
+            if (!rows.length) {
+                return;
             }
-            
-            // Update active filter badge
-            document.querySelectorAll('.filter-badge').forEach(badge => {
-                badge.classList.remove('border', 'border-2', 'border-dark');
+
+            rows.forEach(row => {
+                if (status === 'ALL') {
+                    row.style.display = '';
+                    return;
+                }
+
+                const statusCell = row.querySelector('td:nth-child(7) span[data-status]');
+                if (statusCell && statusCell.getAttribute('data-status') === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
             });
             
-            const activeBadge = document.querySelector(`.filter-badge:contains('${status}')`);
-            if (activeBadge) {
-                activeBadge.classList.add('border', 'border-2', 'border-dark');
-            }
+            document.querySelectorAll('.filter-badge[data-filter-status]').forEach(badge => {
+                badge.classList.remove('border', 'border-2', 'border-dark');
+                if (badge.dataset.filterStatus === status) {
+                    badge.classList.add('border', 'border-2', 'border-dark');
+                }
+            });
         }
-
-        // Add contains selector for older browsers
-        jQuery.expr[':'].contains = function(a, i, m) {
-            return jQuery(a).text().toUpperCase()
-                .indexOf(m[3].toUpperCase()) >= 0;
-        };
-
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             // Add confirmation for cancel actions
